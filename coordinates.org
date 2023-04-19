@@ -1,0 +1,131 @@
+* Coordinate ordering
+#+PROPERTY: header-args:python :session *img* :exports both :results code :eval no-export
+
+** Summary
+
+- Coordinates in PIL are interpreted ~(left-right, top-bottom)~
+- Coordinates in numpy are interpreted ~(top-bottom, left-right)~
+- If you convert between the two, the image stays the same
+
+** ~PIL~
+
+Image sizes in `PIL` are ordered ~(width, height)~.
+
+#+begin_src python
+from PIL import Image
+
+img = Image.new(size=(100, 200), mode="1", color=0)
+
+img.save("img.png")
+
+img.size
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+(100, 200)
+#+end_src
+
+[[./img.png]]
+
+Coordinates are ~left-right, top-bottom~.
+
+The coordinate ~(10, 55)~ is at 10 pixels the left, and 55 pixels from the top.
+
+#+begin_src python
+from PIL import ImageDraw
+
+imgc = img.copy()
+draw = ImageDraw.Draw(imgc)
+
+# draw circle at (15, 55)
+draw.ellipse([(10, 50), (20, 60)], fill=1)
+imgc.save("point.png")
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+None
+#+end_src
+
+[[./point.png]]
+
+** Numpy
+
+If you initialize an image with ~shape=(100, 200)~, this is ~(height, width)~.
+
+#+begin_src python
+import numpy as np
+import matplotlib.pyplot as plt
+
+arr = np.ones((100, 200), dtype="bool")
+arr.shape
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+(100, 200)
+#+end_src
+
+Coordinates are interpreted ~(left-right, top-bottom)~. 
+
+#+begin_src python
+
+for x in range(10, 20):
+    for y in range(50, 60):
+        arr[x, y] = False
+
+plt.imsave("arr.png", arr)
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+None
+#+end_src
+
+[[./arr.png]]
+
+** Conversions
+
+Conversions between the to with ~np.array~ and ~Image.fromarray~ will convert so
+that the image remains the same. So an ~Image~ with ~size~ equal to ~(100, 200)~
+will be converted to an ~np.array~ with ~shape~ equal to ~(200, 100)~. 
+
+#+begin_src python
+np.array(imgc).shape
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+(200, 100)
+#+end_src
+
+#+begin_src python :session *img* :exports both
+plt.imsave("arr_from_pil.png", np.array(imgc))
+#+end_src
+
+#+RESULTS:
+: None
+
+[[./arr_from_pil.png]]
+
+#+begin_src python
+Image.fromarray(~arr).save("pil_from_arr.png")
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+None
+#+end_src
+
+[[./pil_from_arr.png]]
+
+#+begin_src python
+Image.fromarray(np.array(imgc)).size
+#+end_src
+
+#+RESULTS:
+#+begin_src python
+(100, 200)
+#+end_src
+
